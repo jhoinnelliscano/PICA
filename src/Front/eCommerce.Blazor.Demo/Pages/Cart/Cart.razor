@@ -1,0 +1,108 @@
+﻿@layout MainLayout
+@page "/Cart"
+
+<PageTitle>@mainLayout.Title</PageTitle>
+
+<MudGrid Class="d-flex justify-center">
+    <MudItem sm="12" md="11">
+        @if (mainLayout.cart == null)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+        }
+        else
+        {
+            <MudGrid>
+                <MudItem sm="12" md="8">
+                    <div class="mud-expand-panel mud-panel-expanded mud-elevation-1 mud-expand-panel-border">
+                        <div class="mud-expand-panel-header">
+                            <div class="mud-expand-panel-text">
+                                <MudStack Row="true">
+                                    <MudTooltip Text=@( string.Format("{0} todos",(IsCheckAll.HasValue && IsCheckAll.Value) ? "Desmarcar" : "Marcar"))>
+                                        <MudCheckBox @bind-Checked="@IsCheckAll"></MudCheckBox>
+                                    </MudTooltip>
+                                    <MudText Typo="Typo.h5">Shopping Cart (@strCartItemsCount())</MudText>
+                                </MudStack>
+                            </div>
+                        </div>
+                        <div class="mud-collapse-container mud-collapse-entered" style="height:auto;">
+                            <div class="mud-collapse-wrapper">
+                                <div class="mud-collapse-wrapper-inner">
+                                    <div class="mud-expand-panel-content">
+                                        <MudStack Spacing="4">
+                                            @for (var i = 0; i < mainLayout.cart.Count; i++)
+                                            {
+                                                var p = mainLayout.cart[i];
+                                                <MudStack Row="true">
+                                                    <MudTooltip Text="Seleccionar para compra">
+                                                        <MudCheckBox @bind-Checked="@p.isCheck"></MudCheckBox>
+                                                    </MudTooltip>
+                                                    <ProductComponent view="CartUtilities.ViewCard.Cart" @bind-currentShop="@p" OnRemoveCardCallback="@onRemoveCard" OnShopChangedCallback="onShopChanged"/>
+                                                </MudStack>
+                                            }
+                                        </MudStack>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </MudItem>
+                <MudItem sm="12" md="4">
+                    <MudStack Spacing="2">
+                        <div class="mud-expand-panel mud-panel-expanded mud-elevation-1 mud-expand-panel-border">
+                            <div class="mud-expand-panel-header">
+                                <div class="mud-expand-panel-text">
+                                    <div class="d-flex">
+                                        <MudText Typo="Typo.h5">Order Summary</MudText>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mud-collapse-container mud-collapse-entered" style="height:auto;">
+                                <div class="mud-collapse-wrapper">
+                                    <div class="mud-collapse-wrapper-inner">
+                                        <div class="mud-expand-panel-content">
+                                            <MudStack Spacing="4">
+                                                <MudStack Row="true" Class="d-flex justify-space-between flex-grow-1 gap-4">
+                                                    <MudText Typo="Typo.caption">SubTotal</MudText>
+                                                    <MudText Typo="Typo.caption">$@TotalPriceIsCheck</MudText>
+                                                </MudStack>
+                                                <MudDivider Class="my-2" />
+                                                <MudStack Row="true" Class="d-flex justify-space-between flex-grow-1 gap-4">
+                                                    <MudText Typo="Typo.caption"><strong>Total</strong></MudText>
+                                                    <MudText Typo="Typo.caption"><strong>$@TotalPriceIsCheck</strong></MudText>
+                                                </MudStack>
+                                                <MudDivider Class="my-2" />
+                                                <MudButton Variant="Variant.Filled" FullWidth="true" OnClick="@OnContinuePreOrder">BUY (@mainLayout.cart.Count(x=> x.isCheck))</MudButton>
+                                            </MudStack>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </MudStack>
+                </MudItem>
+            </MudGrid>
+        }
+    </MudItem>
+</MudGrid>
+
+<MudDialog @bind-IsVisible="isOpenRemoveCardForm" Options="dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h5">
+            <MudIcon Icon="@Icons.Filled.ShoppingBasket" Class="mr-3" />Atención!
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (CurrentProduct == null)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+        }
+        else
+        {
+            <MudText Typo="Typo.subtitle2">Esta seguro que desea eliminar el producto @CurrentProduct.Product.Name del carrito ?</MudText>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancelar</MudButton>
+        <MudButton Color="Color.Primary" OnClick="ok">Confirmar</MudButton>
+    </DialogActions>
+</MudDialog>

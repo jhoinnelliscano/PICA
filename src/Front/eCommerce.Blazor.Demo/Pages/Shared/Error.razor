@@ -1,0 +1,34 @@
+﻿@using Microsoft.AspNetCore.Components.WebAssembly.Hosting
+@using eCommerce.Services.Exceptions
+@inject IWebAssemblyHostEnvironment _webAssemblyHostEnvironment
+@inject IToastService _toastService
+@inject ISnackbar _snackbar
+@inject IJSRuntime _js
+
+
+<CascadingValue Value="this">
+    @ChildContent
+</CascadingValue>
+
+@code {
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    public async void ProcessError(Exception ex)
+    {
+        //_logger.LogError(ex, "");
+        Console.WriteLine(ex);
+        if (ex is not ServiceException)
+        {
+            if (_webAssemblyHostEnvironment.IsDevelopment())
+                _toastService.ShowError($"{ex.Message}");
+            else
+                _toastService.ShowError("Opps, something has gone wrong. Please contact system admin");
+        }
+        else
+        {
+            _snackbar.Add((ex as ServiceException).Response.Response, Severity.Error);
+        }
+        //await _js.InvokeVoidAsync("log", ex);
+    }
+}

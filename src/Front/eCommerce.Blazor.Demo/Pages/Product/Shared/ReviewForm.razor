@@ -1,0 +1,127 @@
+﻿@using eCommerce.Commons.Objects.Responses.Customer
+@inject CustomerService CustomerService
+@inject ProductService Productservice
+
+<MudStack>
+
+    <AuthorizeView>
+        <Authorized>
+
+            @if (SavingReview)
+            {
+
+                <MudPaper Class="pa-2">
+                    <MudText Typo="Typo.caption">Guardando review ...</MudText>
+                </MudPaper>
+            }
+            else
+            {
+                @if (Customer != null)
+                {
+                    <MudPaper Class="pa-2">
+                        <MudStack Row="true">
+                            <MudAvatar Image="@picture" Size="Size.Large" />
+                            <MudStack Justify="Justify.Center" Spacing="0">
+                                <MudText Typo="Typo.body1">@Customer.FirstName @Customer.LastName</MudText>
+                                <MudText Typo="Typo.body2">@Customer.Email</MudText>
+                            </MudStack>
+                        </MudStack>
+                    </MudPaper>
+                }
+
+                <MudPaper Class="pa-2">
+                    <MudStack Spacing="4">
+                        <MudForm @ref="reviewForm" @bind-IsValid="@successReview">
+                            <MudStack Row="true" AlignItems="AlignItems.End">
+                                <MudTextField T="string" Label="Subject" Class="pl-2" Required="true" RequiredError="Subject is required!" @bind-Text="review.UserName" />
+                                <MudRating Size="Size.Large" Class="pr-2" MaxValue="5" @bind-SelectedValue="review.Value" />
+                            </MudStack>
+                            <MudTextField T="string" Label="Your review" Lines="5" Required="true" RequiredError="review is required!" @bind-Text="review.Review" />
+                        </MudForm>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" DisableElevation="true" OnClick="@CreateReview">Add a review</MudButton>
+                    </MudStack>
+                </MudPaper>
+            }
+        </Authorized>
+        <NotAuthorized>
+            <MudPaper Class="pa-2">
+                <MudText Typo="Typo.caption">To continue you must <a href="authentication/login">log in</a>.</MudText>
+            </MudPaper>
+        </NotAuthorized>
+    </AuthorizeView>
+</MudStack>
+
+@code {
+    [CascadingParameter]
+    public Error Error { get; set; }
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    [Parameter]
+    public ProductResponse product { get; set; }
+
+    [Parameter]
+    public EventCallback reviewComplet { get; set; }
+
+    [Parameter]
+    public EventCallback reviewError { get; set; }
+
+    private CustomerResponse Customer { get; set; }
+    private string picture { get; set; }
+    private MudForm? reviewForm;
+    private bool successReview { get; set; }
+    private bool SavingReview { get; set; } = false;
+    private ProductReviewRequest review { get; set; } = new();
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var user = (await authenticationStateTask).User;
+            if (user.Identity.IsAuthenticated)
+            {
+                Customer = (await CustomerService.GetCustomer()).Response;
+                picture = user.Claims.FirstOrDefault(c => c.Type == "picture").Value ?? "https://docs.microsoft.com/windows/uwp/contacts-and-calendar/images/shoulder-tap-static-payload.png";
+            }
+
+        }
+        catch (Exception ex)
+        {
+            Error.ProcessError(ex);
+        }
+    }
+
+
+    private async Task CreateReview()
+    {
+        try
+        {
+            SavingReview = true;
+            await reviewForm.Validate();
+            if (successReview)
+            {
+                review.UserId = Customer.Id;
+                review.ProductCode = product.Code;
+
+                var r = await Productservice.CreateReview(review);
+                if (r.Response)
+                {
+                    if (reviewComplet.HasDelegate)
+                        reviewComplet.InvokeAsync();
+                }
+                else
+                {
+                    if (reviewError.HasDelegate)
+                        reviewError.InvokeAsync();
+                }
+                review = new();
+            }
+        }
+        catch (Exception ex)
+        {
+            Error.ProcessError(ex);
+        }
+        finally
+        {
+            SavingReview = false;
+        }
+    }
+}

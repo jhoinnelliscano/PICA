@@ -1,0 +1,270 @@
+﻿@layout MainLayout
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@inject IAccessTokenProvider TokenProvider
+@attribute [Authorize]
+@page "/Profile"
+
+<br />
+
+@if (Searching)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <MudForm @ref="form" @bind-IsValid="@Success" @bind-Errors="@errors">
+        <MudCard>
+            <MudCardContent>
+                <MudText>User Information</MudText>
+                <br />
+                <MudGrid>
+                    <MudItem xs="4">
+                        <MudStack>
+                            <MudSelect T="string" Label="Identification Type" Required="true" RequiredError="Identification type is required!" AnchorOrigin="Origin.BottomCenter" FullWidth="true" @bind-Text="@Customer.IdentTypeId">
+                                @if (IdentificationsType != null)
+                                {
+                                    foreach (var idnType in IdentificationsType)
+                                    {
+                                        <MudSelectItem Value="@idnType.Id">@idnType.Description</MudSelectItem>
+                                    }
+                                }
+                            </MudSelect>
+                        </MudStack>
+                    </MudItem>
+                    <MudItem xs="4">
+                        <MudStack>
+                            <MudTextField T="string" Label="Identification" Class="d-flex" Required="true" RequiredError="Identification is required!" FullWidth="true" @bind-Text="@Customer.Identification" />
+                        </MudStack>
+                    </MudItem>
+                    <MudItem xs="4">
+                        <MudStack>
+                            <MudTextField T="string" Label="Authentication type" Class="d-flex" Required="true" Disabled="true" FullWidth="true" @bind-Text="@Customer.AutenticationType" />
+                        </MudStack>
+                    </MudItem>
+                    <MudItem xs="4">
+                        <MudStack>
+                            <MudTextField T="string" Label="First Name" Class="d-flex" Required="true" RequiredError="First Name is required!" FullWidth="true" @bind-Text="@Customer.FirstName" />
+                        </MudStack>
+                    </MudItem>
+                    <MudItem xs="4">
+                        <MudStack>
+                            <MudTextField T="string" Label="Last Name" Class="d-flex" Required="true" RequiredError="Last Name is required!" FullWidth="true" @bind-Text="@Customer.LastName" />
+                        </MudStack>
+                    </MudItem>
+                    <MudItem xs="4">
+                        <MudStack>
+                            <MudTextField T="string" Label="Email" Class="d-flex" Required="true" RequiredError="Email is required!" Disabled="true" FullWidth="true" @bind-Text="@Customer.Email"
+                                      Validation="@(new EmailAddressAttribute() {ErrorMessage = "The email address is invalid"})" />
+                        </MudStack>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudStack>
+                            <div class="d-flex align-center justify-space-between mt-6">
+                                <MudCheckBox T="bool" Required="true" RequiredError="You must agree" @bind-Checked="@IsAgree" Class="ml-n2" Label="I agree!" />
+                                @if (SavingCustomer)
+                                {
+                                    <p>Procesando...</p>
+                                }
+                                else
+                                {
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!IsAgree)" OnClick="@SaveUser" Class="ml-auto">Save</MudButton>
+                                }
+                            </div>
+                        </MudStack>
+                    </MudItem>
+                </MudGrid>
+                <br />
+                <br />
+            </MudCardContent>
+        </MudCard>
+    </MudForm>
+
+    <br />
+    <MudButton Class="ml-auto" Color="Color.Primary" OnClick="@ShowCreateShippingAddressModal">Add Shipping Address</MudButton>
+    <br />
+
+    if (CustomerAddressList != null && CustomerAddressList.Any())
+    {
+        foreach (var address in CustomerAddressList.OrderBy(x => !x.Default).ToList())
+        {
+            <MudCard>
+                <MudCardContent>
+                    <MudGrid>
+                        <MudItem xs="4">
+                            <MudStack>
+                                <MudTextField T="string" Label="First Name" Class="d-flex" Disabled="true" FullWidth="true" @bind-Text="@address.FirstName" />
+                            </MudStack>
+                        </MudItem>
+                        <MudItem xs="4">
+                            <MudStack>
+                                <MudTextField T="string" Label="Last Name" Class="d-flex" Disabled="true" FullWidth="true" @bind-Text="@address.LastName" />
+                            </MudStack>
+                        </MudItem>
+                        <MudItem xs="4">
+                            <MudStack>
+                                <MudTextField T="string" Label="Phone" Class="d-flex" Disabled="true" FullWidth="true" @bind-Text="@address.Phone" />
+                            </MudStack>
+                        </MudItem>
+                        <MudItem xs="4">
+                            <MudStack>
+                                <MudTextField T="string" Label="Email Address" Class="d-flex" Disabled="true" FullWidth="true" @bind-Text="@address.Email" />
+                            </MudStack>
+                        </MudItem>
+                        <MudItem xs="4">
+                            <MudStack>
+                                <MudTextField T="string" Label="Department" Class="d-flex" Disabled="true" FullWidth="true" @bind-Text="@address.Deparment" />
+                            </MudStack>
+                        </MudItem>
+                        <MudItem xs="4">
+                            <MudStack>
+                                <MudTextField T="string" Label="City" Class="d-flex" Disabled="true" FullWidth="true" @bind-Text="@address.City" />
+                            </MudStack>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudStack>
+                                <MudTextField T="string" Label="Adress" Placeholder="House number and street name" Disabled="true" Class="d-flex" FullWidth="true" @bind-Text="@address.Address" />
+                            </MudStack>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudStack>
+                                <MudTextField T="string" Label="Adress Desc" Placeholder="Apartment, suite, unit etc." Disabled="true" Class="d-flex" FullWidth="true" @bind-Text="@address.AddressDesc" />
+                            </MudStack>
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudStack>
+                                <MudTextField T="string" Label="Aditional Information" Class="d-flex" FullWidth="true" Disabled="true" @bind-Text="@address.OtherInformation" />
+                            </MudStack>
+                        </MudItem>
+                        <MudItem xs="10">
+                            @if (@address.Default)
+                            {
+                                <MudCheckBox @bind-Checked="@address.Default" Disabled="true" Label="Is Default"></MudCheckBox>
+                            }
+                        </MudItem>
+                        <MudItem xs="2">
+                            <div class="d-flex align-center justify-space-between mt-2">
+                                <MudButton Color="Color.Default" OnClick="@(e => ShowDeleteShippingAddressModel(address.Id))" Class="ml-auto">Delete</MudButton>
+                                <MudButton Color="Color.Default" OnClick="@(e => ShowEditShippingAddressModal(address.Id))" Class="ml-auto">Edit</MudButton>
+                            </div>
+                        </MudItem>
+                    </MudGrid>
+
+                </MudCardContent>
+            </MudCard>
+            <br />
+            <br />
+        }
+    }
+}
+
+<MudDialog @bind-IsVisible="@ShowModal" Options="dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h5">
+            <MudIcon Icon="@Icons.Filled.LocalShipping" Class="mr-3" />Shipping Address!
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="formShippingAddress" @bind-IsValid="@SuccessAddress">
+            <MudCard>
+                <MudCardContent>
+                    <MudGrid>
+                        <MudItem xs="4">
+                            <MudStack>
+                                <MudTextField T="string" Label="First Name" Class="d-flex" Required="true" RequiredError="First Name is required!" FullWidth="true" @bind-Text="@CreateCustomerAddress.FirstName" />
+                            </MudStack>
+                        </MudItem>
+                        <MudItem xs="4">
+                            <MudStack>
+                                <MudTextField T="string" Label="Last Name" Class="d-flex" Required="true" RequiredError="Last Name is required!" FullWidth="true" @bind-Text="@CreateCustomerAddress.LastName" />
+                            </MudStack>
+                        </MudItem>
+                        <MudItem xs="4">
+                            <MudStack>
+                                <MudTextField T="string" Label="Phone" Class="d-flex" Required="true" RequiredError="Phone is required!" FullWidth="true" @bind-Text="@CreateCustomerAddress.Phone" />
+                            </MudStack>
+                        </MudItem>
+                        <MudItem xs="4">
+                            <MudStack>
+                                <MudTextField T="string" Label="Email Address" Class="d-flex" Required="true" RequiredError="Email is required!"
+                                              Validation="@(new EmailAddressAttribute() {ErrorMessage = "The email address is invalid"})" FullWidth="true" @bind-Text="@CreateCustomerAddress.Email" />
+                            </MudStack>
+                        </MudItem>
+                        <MudItem xs="4">
+                            <MudStack>
+                                <MudTextField T="string" Label="Department" Class="d-flex" Required="true" RequiredError="Department is required!" FullWidth="true" @bind-Text="@CreateCustomerAddress.Deparment" />
+                            </MudStack>
+                        </MudItem>
+                        <MudItem xs="4">
+                            <MudStack>
+                                <MudTextField T="string" Label="City" Class="d-flex" Required="true" RequiredError="City is required!" FullWidth="true" @bind-Text="@CreateCustomerAddress.City" />
+                            </MudStack>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudStack>
+                                <MudTextField T="string" Label="Adress" Placeholder="House number and street name" RequiredError="Adress is required!" Required="true" Class="d-flex" FullWidth="true" @bind-Text="@CreateCustomerAddress.Address" />
+                            </MudStack>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudStack>
+                                <MudTextField T="string" Label="Adress Desc" Placeholder="Apartment, suite, unit etc." RequiredError="Adress Desc is required!" Required="true" Class="d-flex" FullWidth="true" @bind-Text="@CreateCustomerAddress.AddressDesc" />
+                            </MudStack>
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudStack>
+                                <MudTextField T="string" Label="Aditional Information" Class="d-flex" FullWidth="true" RequiredError="Aditional Information is required!" @bind-Text="@CreateCustomerAddress.OtherInformation" Lines="2" />
+                            </MudStack>
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudCheckBox @bind-Checked="@CreateCustomerAddress.Default" Label="Save as default"></MudCheckBox>
+                        </MudItem>
+                    </MudGrid>
+                </MudCardContent>
+            </MudCard>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        @if (!SavingAddress)
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Default" OnClick="CloseShippingAddressModal">Cancel</MudButton>
+            @if (!EditingMode)
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@CreateShippingAddress">Save</MudButton>
+            }
+            else
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@UpdateShippingAddress">Save</MudButton>
+            }
+        }
+        else
+        {
+            <p>Procesando...</p>
+        }
+        <br />
+    </DialogActions>
+</MudDialog>
+
+<MudDialog @bind-IsVisible="@ShowDeleteModal" Options="deleteDialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h5">
+            <MudIcon Icon="@Icons.Filled.LocalShipping" Class="mr-3" />Delete Shipping Address!
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <h5>Are you sure you want to delete this shipping address</h5>
+    </DialogContent>
+    <DialogActions>
+        @if (!DeletingAddress)
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Default" OnClick="@CloseDeleteShippingAddressModal">Cancel</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="@DeleteShippingAddress">Delete</MudButton>
+        }
+        else
+        {
+            <p>Procesando...</p>
+        }
+        <br />
+    </DialogActions>
+</MudDialog>
+

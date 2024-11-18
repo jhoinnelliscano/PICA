@@ -1,0 +1,50 @@
+﻿@using Microsoft.AspNetCore.Components.WebAssembly.Hosting
+@using System.Text.Json
+@using Microsoft.AspNetCore.WebUtilities
+@using eCommerce.Commons.Objects.Requests.Payments
+@using eCommerce.Commons.Objects.Responses.Order
+@inject IJSRuntime _js
+@inject IConfiguration _Configuration
+@inject ConfigPaymentEpayCo configPayment
+<CascadingValue Value="this">
+    @ChildContent
+</CascadingValue>
+
+@code {
+    [CascadingParameter] private Error Error { get; set; }
+    [Parameter] public RenderFragment ChildContent { get; set; }
+    private const string globalJsConfigure = "setEpayConfigure";
+    private const string globalJsCheckout = "checkout";
+    private const string globalJsgetTransaction = "getTransaction";
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            
+        }
+        catch (Exception ex)
+        {
+            Error.ProcessError(ex);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await _js.InvokeVoidAsync(globalJsConfigure, configPayment);
+        }
+    }
+    public async Task checkout(PaymentEpayCo data)
+    {
+        await _js.InvokeVoidAsync(globalJsCheckout, data);
+    }
+
+    public async Task<EpayCoResponse> getTransaction(string referencia)
+    {
+        var obj = await _js.InvokeAsync<EpayCoResponse>(globalJsgetTransaction, referencia);
+        return obj;
+    }
+}

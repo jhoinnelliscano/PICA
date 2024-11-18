@@ -1,0 +1,40 @@
+# ASP.NET
+# Build and test ASP.NET projects.
+# Add steps that publish symbols, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/apps/aspnet/build-aspnet-4
+trigger:
+- main
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+
+steps:
+- task: SonarQubePrepare@5
+  inputs:
+    SonarQube: 'ProjectServiceConection'
+    scannerMode: 'MSBuild'
+    ProjectKey: 'Customer-key'
+    ProjectName: 'Customer'
+    extraProperties: |
+      sonar.exclusions=src/Front/eCommerce.Blazor.Demo/wwwroot/**/*
+
+- script: dotnet restore
+
+- task: DotNetCoreCLI@2
+  displayName: Build
+  inputs:
+    command: 'build'
+    projects: '**/eCommerce.Customers.Api.csproj'
+    arguments: '--configuration $(buildConfiguration)'
+
+- task: SonarQubeAnalyze@5
+- task: SonarQubePublish@5
+  inputs:
+    pollingTimeoutSec: '300'
+
+

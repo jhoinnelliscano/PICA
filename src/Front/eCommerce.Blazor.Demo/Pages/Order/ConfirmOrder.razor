@@ -1,0 +1,93 @@
+﻿@inject NavigationManager NavManager
+@attribute [Authorize]
+@page "/ConfirmOrder/{OrderId}"
+
+<style>
+    .selected {
+        background-color: #1E88E5 !important;
+    }
+
+        .selected > td {
+            color: white !important;
+        }
+
+            .selected > td .mud-input {
+                color: white !important;
+            }
+</style>
+
+<PageTitle>@mainLayout.Title</PageTitle>
+
+<MudGrid Class="d-flex justify-center">
+
+    @if (cargando == true)
+    {
+        <MudItem sm="12" md="5">
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+        </MudItem>
+    }
+    else
+    {
+        @if (order == null)
+        {
+            <MudItem sm="12" md="11">
+                    <br />
+                <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center">
+                        <h3 style="color:red">Ocurrio un error al procesar su pago.</h3>
+                </MudStack>
+               <br />
+                <NotFound />
+            </MudItem>
+        }
+        else
+        {
+            <MudItem sm="12" md="5">
+                <MudStack>
+                    <table class="mud-table-root">
+                        <tbody class="mud-table-body">
+                            <tr class="mud-table-row" style="">
+                                <td data-label="Nr" class="mud-table-cell">Autorizacion</td>
+                                <td data-label="Sign" class="mud-table-cell">@epayCoResponse.data.x_approval_code</td>
+                            </tr>
+                            <tr class="mud-table-row" style="">
+                                <td data-label="Nr" class="mud-table-cell">Referencia</td>
+                                <td data-label="Sign" class="mud-table-cell">@epayCoResponse.data.x_id_invoice</td>
+                            </tr>
+                            <tr class="mud-table-row" style="">
+                                <td data-label="Nr" class="mud-table-cell">Fecha</td>
+                                <td data-label="Sign" class="mud-table-cell">@epayCoResponse.data.x_transaction_date</td>
+                            </tr>
+                            <tr class="mud-table-row" style="">
+                                <td data-label="Nr" class="mud-table-cell">Respuesta</td>
+                                <td data-label="Sign" class="mud-table-cell">@epayCoResponse.data.x_response</td>
+                            </tr>
+                            <tr class="mud-table-row" style="">
+                                <td data-label="Nr" class="mud-table-cell">Motivo</td>
+                                <td data-label="Sign" class="mud-table-cell">@epayCoResponse.data.x_response_reason_text</td>
+                            </tr>
+                            <tr class="mud-table-row" style="">
+                                <td data-label="Nr" class="mud-table-cell">Banco</td>
+                                <td data-label="Sign" class="mud-table-cell">@epayCoResponse.data.x_bank_name</td>
+                            </tr>
+                            <tr class="mud-table-row" style="">
+                                <td data-label="Nr" class="mud-table-cell">Recibo</td>
+                                <td data-label="Sign" class="mud-table-cell">@epayCoResponse.data.x_transaction_id</td>
+                            </tr>
+                            <tr class="mud-table-row" style="">
+                                <td data-label="Nr" class="mud-table-cell">Total</td>
+                                <td data-label="Sign" class="mud-table-cell">@epayCoResponse.data.x_amount @epayCoResponse.data.x_currency_code</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <MudStack Row="true">
+                        <MudImage Src="https://369969691f476073508a-60bf0867add971908d4f26a64519c2aa.ssl.cf5.rackcdn.com/btns/epayco/pagos_procesados_por_epayco_260px.png" Style="margin-top:10px; float:left"></MudImage>
+                        <MudImage Src="https://369969691f476073508a-60bf0867add971908d4f26a64519c2aa.ssl.cf5.rackcdn.com/btns/epayco/credibancologo.png" Style="margin-top:10px; float:right" Height="40"></MudImage>
+                    </MudStack>
+                </MudStack>
+            </MudItem>
+        }
+    }
+</MudGrid>
+
+
+

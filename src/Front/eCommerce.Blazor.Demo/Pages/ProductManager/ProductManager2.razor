@@ -1,0 +1,105 @@
+﻿@layout MainLayout
+@inject NavigationManager NavManager
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@page "/ProductManager"
+
+<br />
+<AuthorizeView>
+    <Authorized>
+
+        <MudCard>
+            <MudCardContent>
+                <MudText>Product</MudText>
+                <br />
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudStack>
+                            <MudTextField T="string" Label="Product Code" Class="d-flex" Required="true" RequiredError="Product code is required!" FullWidth="true" @bind-Text="@PorductCode" />
+                        </MudStack>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudStack>
+                            @if (!Procesing)
+                            {
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@GetProduct" Class="ml-auto">Search</MudButton>
+                            }
+                        </MudStack>
+                    </MudItem>
+                </MudGrid>
+            </MudCardContent>
+        </MudCard>
+
+        @if (ProductFound == true)
+        {
+            <br />
+
+            <br />
+            <MudCard>
+                <MudCardContent>
+                    <MudGrid Class="d-flex justify-center">
+                        <MudGrid>
+                            <MudItem sm="12" md="3">
+                                <MudGrid>
+                                    <MudItem xs="12" Class="image-container">
+                                        <figure class="main-img" style="min-height:250px">
+                                            <MudImage id="img-Box"
+                                                  Class="rounded-lg"
+                                                  Src="@Product.Image"
+                                                  Fluid="true"
+                                                  ObjectFit="ObjectFit.Cover"
+                                                  ObjectPosition="ObjectPosition.Center"
+                                                  onpointerenter="showImage()" onpointerleave="hideImage()" />
+                                        </figure>
+                                    </MudItem>
+                                </MudGrid>
+                            </MudItem>
+                            <MudItem sm="12" md="9">
+                                <MudStack class="mud-width-full">
+                                    <MudText Typo="Typo.h4">@Product.Name</MudText>
+                                    <MudText Typo="Typo.caption">@Product.Category.Category</MudText>
+                                    <MudText Typo="Typo.h5">$@(Product.Price.ToString())</MudText>
+                                    <MudItem sm="6" md="3">
+
+                                        <MudTextField T="string" Label="Product Price" Class="d-flex" Required="true" RequiredError="Product price is required!" FullWidth="true" @bind-Text="@PorductPrice" />
+                                    </MudItem>
+
+                                    <MudDivider Class="my-2" />
+                                    <div class="d-flex flex-row">
+
+                                        <MudItem sm="6" md="3">
+                                            <MudTextField T="string" Label="Product Stock" Class="d-flex" Required="true" RequiredError="Product stock is required!" FullWidth="true" @bind-Text="@PorductStock" />
+                                        </MudItem>
+                                    </div>
+                                </MudStack>
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudStack>
+                                    @if (!Procesing)
+                                    {
+                                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@UpdateProduct" Class="ml-auto">Save Product</MudButton>
+                                    }
+                                    else
+                                    {
+                                        <p>Procesing...</p>
+                                    }                                   
+                                    <br />
+                                    <br />
+                                </MudStack>
+                            </MudItem>
+                        </MudGrid>
+                    </MudGrid>
+                </MudCardContent>
+            </MudCard>
+        }
+
+    </Authorized>
+    <NotAuthorized>
+        Please login to see all the claims, <a href="authentication/login">Log in</a>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+
+

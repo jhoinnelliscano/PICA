@@ -1,0 +1,24 @@
+# docker build -t front_blazor -f Dockerfile.Front .
+
+# ARG VERSION=6.0-alpine
+ARG VERSION=6.0-alpine3.14
+FROM mcr.microsoft.com/dotnet/sdk:$VERSION as build
+# Disable the invariant mode (set in base image)
+ENV DOTNET_RUNNING_IN_CONTAINER=true
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
+# Install cultures (same approach as Alpine SDK image)
+# RUN apk add --no-cache icu-libs krb5-libs libgcc libintl libssl1.1 libstdc++ zlib
+WORKDIR /app
+COPY . .
+RUN dotnet restore \
+          ./Front/eCommerce.Blazor.Demo/eCommerce.Blazor.Demo.csproj
+RUN dotnet publish \
+          ./Front/eCommerce.Blazor.Demo/eCommerce.Blazor.Demo.csproj \
+          -c Release \
+          -o /app/published-app
+
+FROM nginx:alpine AS final
+WORKDIR /usr/share/nginx/html
+
+COPY --from=build /app/published-app/wwwroot /usr/local/webapp/nginx/html
+COPY ./Front/nginx.conf /etc/nginx/nginx.conf

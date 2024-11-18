@@ -1,0 +1,377 @@
+﻿@layout MainLayout
+@page "/PreOrder"
+@page "/PreOrder/{code}"
+@using System.ComponentModel.DataAnnotations
+@*@attribute [Authorize(Roles = "Customer")]*@
+@attribute [Authorize]
+
+<PageTitle>@mainLayout.Title</PageTitle>
+
+<MudGrid Class="d-flex justify-center">
+    <MudItem sm="12" md="11">
+        @if (items == null)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+        }
+        else
+        {
+            <MudGrid>
+                <MudItem sm="12" md="8">
+                    <MudStack Spacing="4">
+                        <MudPaper Elevation="0" Class="mt-n1">
+                            @*<EditForm>
+                                <DataAnnotationsValidator />*@
+                            <div class="mud-expand-panel mud-panel-expanded mud-elevation-1 mud-expand-panel-border">
+                                <div class="mud-expand-panel-header">
+                                    <div class="mud-expand-panel-text">
+                                        <MudStack Row="true" Justify="Justify.SpaceBetween">
+                                            <MudText Typo="Typo.h5">shipping information</MudText>
+                                            <MudLink Color="Color.Secondary" onclick="@ShowListShippingAddressModal">
+                                                Change
+                                            </MudLink>
+                                        </MudStack>
+                                    </div>
+                                </div>
+                                <div class="mud-collapse-container mud-collapse-entered" style="height:auto;">
+                                    <div class="mud-collapse-wrapper">
+                                        <div class="mud-collapse-wrapper-inner">
+                                            <div class="mud-expand-panel-content">
+                                                @if (CurrentAddress == null)
+                                                {
+                                                    <p> You have not added any shipping information for the purchase</p>
+                                                }
+                                                else
+                                                {
+                                                    <p>
+                                                        <b>@CurrentAddress.FirstName @CurrentAddress.LastName, @CurrentAddress.Phone</b><br />
+                                                        @CurrentAddress.Email<br />
+                                                        @CurrentAddress.Address, @CurrentAddress.AddressDesc<br />
+                                                        @CurrentAddress.City, @CurrentAddress.Deparment, Colombia, @CurrentAddress.PostalCode
+                                                    </p>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </MudPaper>
+
+                        <MudPaper Elevation="0" Class="mt-n1">
+                            <div class="mud-expand-panel mud-panel-expanded mud-elevation-1 mud-expand-panel-border">
+                                <div class="mud-expand-panel-header">
+                                    <div class="mud-expand-panel-text">
+                                        <MudText Typo="Typo.h5">Details Orden</MudText>
+                                    </div>
+                                </div>
+                                <div class="mud-collapse-container mud-collapse-entered" style="height:auto;">
+                                    <div class="mud-collapse-wrapper">
+                                        <div class="mud-collapse-wrapper-inner">
+                                            <div class="mud-expand-panel-content">
+                                                <MudStack Spacing="4">
+                                                    @for (var i = 0; i < items.Count; i++)
+                                                    {
+                                                        var p = items[i];
+                                                        <ProductComponent view="CartUtilities.ViewCard.order" @bind-currentShop="@p" OnShopChangedCallback="onShopChanged" />
+                                                    }
+                                                </MudStack>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </MudPaper>
+                    </MudStack>
+                </MudItem>
+                <MudItem sm="12" md="4">
+                    <MudStack Spacing="2">
+                        <div class="mud-expand-panel mud-panel-expanded mud-elevation-1 mud-expand-panel-border">
+                            <div class="mud-expand-panel-header">
+                                <div class="mud-expand-panel-text">
+                                    <div class="d-flex">
+                                        <MudText Typo="Typo.h5">Order Summary</MudText>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mud-collapse-container mud-collapse-entered" style="height:auto;">
+                                <div class="mud-collapse-wrapper">
+                                    <div class="mud-collapse-wrapper-inner">
+                                        <div class="mud-expand-panel-content">
+                                            <MudStack Spacing="4">
+                                                <MudStack Row="true" Class="d-flex justify-space-between flex-grow-1 gap-4">
+                                                    <MudText Typo="Typo.caption">SubTotal</MudText>
+                                                    <MudText Typo="Typo.caption">$@TotalPriceIsCheck</MudText>
+                                                </MudStack>
+                                                <MudStack Row="true" Class="d-flex justify-space-between flex-grow-1 gap-4">
+                                                    <MudText Typo="Typo.caption">Promotional code</MudText>
+                                                    <MudText Typo="Typo.caption">$0</MudText>
+                                                </MudStack>
+                                                <MudStack Row="true" Class="d-flex justify-space-between flex-grow-1 gap-4">
+                                                    <MudText Typo="Typo.caption">Shipping</MudText>
+                                                    <MudText Typo="Typo.caption">Gratis</MudText>
+                                                </MudStack>
+                                                <MudDivider Class="my-2" />
+                                                <MudStack Row="true" Class="d-flex justify-space-between flex-grow-1 gap-4">
+                                                    <MudText Typo="Typo.caption"><strong>Total</strong></MudText>
+                                                    <MudText Typo="Typo.caption"><strong>$@TotalPriceIsCheck</strong></MudText>
+                                                </MudStack>
+                                                <MudDivider Class="my-2" />
+                                                <MudButton Variant="Variant.Filled" FullWidth="true" OnClick="@checkOut">go to checkout</MudButton>
+                                            </MudStack>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @*@*<div class="mud-expand-panel mud-panel-expanded mud-elevation-1 mud-expand-panel-border">
+                            <div class="mud-collapse-container mud-collapse-entered" style="height:auto;">
+                            <div class="mud-collapse-wrapper">
+                            <div class="mud-collapse-wrapper-inner">
+                            <div class="pa-2">
+                            <MudTextField Label="Promotional code" Value="@textPrueba" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Filled.Discount" />
+                            </div>
+                            </div>
+                            </div>
+                            </div>
+                            </div>*@
+                    </MudStack>
+                </MudItem>
+            </MudGrid>
+        }
+    </MudItem>
+</MudGrid>
+
+<MudDialog @bind-IsVisible="@isOpenAddressForm" Options="dialogAddressOptions">
+    @*<TitleContent>
+        @switch (operation)
+        {
+        case CartUtilities.OperationMode.List:
+        <MudStack Row="true" Justify="Justify.SpaceBetween">
+        <MudText Typo="Typo.h5">
+        <MudIcon Icon="@Icons.Filled.LocalShipping" Class="mr-3" />Direcciones de envio!
+        </MudText>
+        <MudLink Color="Color.Secondary" onclick="@ShowCreateShippingAddressModal">
+        Nueva Direccion
+        </MudLink>
+        </MudStack>
+        break;
+        case CartUtilities.OperationMode.Delete:
+        <MudText Typo="Typo.h5">
+        <MudIcon Icon="@Icons.Filled.LocalShipping" Class="mr-3" />Desea eliminar esta direccion!
+        </MudText>
+        break;
+        default:
+        @if (!EditingMode)
+        {
+        <MudText Typo="Typo.h5">
+        <MudIcon Icon="@Icons.Filled.LocalShipping" Class="mr-3" />Editar direccion de envio!
+        </MudText>
+        }
+        else
+        {
+        <MudText Typo="Typo.h5">
+        <MudIcon Icon="@Icons.Filled.LocalShipping" Class="mr-3" />Nueva direccion de envio!
+        </MudText>
+        }
+        break;
+        }
+        </TitleContent>*@
+    <DialogContent>
+        @switch (operation)
+        {
+            case CartUtilities.OperationMode.List:
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                    <MudText Typo="Typo.h5">
+                        <MudIcon Icon="@Icons.Filled.LocalShipping" Class="mr-3" />Direcciones de envio!
+                    </MudText>
+                    <MudTooltip Text="Nueva">
+                        <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Secondary" OnClick="@ShowCreateShippingAddressModal" />
+                    </MudTooltip>
+                </MudStack>
+                break;
+            case CartUtilities.OperationMode.Delete:
+                <MudText Typo="Typo.h5">
+                    <MudIcon Icon="@Icons.Filled.LocalShipping" Class="mr-3" />Esta seguro de eliminar la siguinte direccion de envio!
+                </MudText>
+                break;
+            default:
+                @if (!EditingMode)
+                {
+                    <MudText Typo="Typo.h5">
+                        <MudIcon Icon="@Icons.Filled.LocalShipping" Class="mr-3" />Nueva direccion de envio!
+                    </MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.h5">
+                        <MudIcon Icon="@Icons.Filled.LocalShipping" Class="mr-3" />Actualizar direccion de envio!
+                    </MudText>
+                }
+                break;
+        }
+        <br />
+        @switch (operation)
+        {
+            case CartUtilities.OperationMode.List:
+                if (CustomerAddressList == null)
+                {
+
+                    <p>Procesando...</p>
+                }
+                else if (CustomerAddressList.Any())
+                {
+                    foreach (var address in CustomerAddressList.OrderBy(x => !x.Default).ToList())
+                    {
+                        <MudStack Row="true" Justify="Justify.SpaceBetween">
+
+                            @if ((OperatorAddress != null && address.Id == OperatorAddress.Id) || (OperatorAddress == null && address.Default))
+                            {
+                                <MudText Color="Color.Success" Typo="Typo.caption">
+                                    <b>@address.FirstName @address.LastName, @address.Phone</b><br />
+                                    @address.Email<br />
+                                    @address.Address, @address.AddressDesc<br />
+                                    @address.City, @address.Deparment, Colombia, @address.PostalCode
+                                </MudText>
+                            }
+                            else
+                            {
+                                <p>
+                                    <b>@address.FirstName @address.LastName, @address.Phone</b><br />
+                                    @address.Email<br />
+                                    @address.Address, @address.AddressDesc<br />
+                                    @address.City, @address.Deparment, Colombia, @address.PostalCode
+                                </p>
+                            }
+                            <MudStack Row="true">
+                                <MudTooltip Text="Seleccionar">
+                                    <MudIconButton Icon="@Icons.Filled.Check" Color="Color.Secondary" OnClick="@(()=>{ ShowSelectShippingAddressModal(address.Id);})" />
+                                </MudTooltip>
+                                <MudTooltip Text="Editar">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Secondary" OnClick="@(()=>{ShowEditShippingAddressModal(address.Id);})" />
+                                </MudTooltip>
+                                <MudTooltip Text="Eliminar">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Secondary" OnClick="@(()=>{ShowDeleteShippingAddressModal(address.Id);})" />
+                                </MudTooltip>
+                            </MudStack>
+                        </MudStack>
+                    }
+                }
+                else
+                {
+
+                    <p>El usuario no tiene direccciones agregadas</p>
+                }
+                break;
+            case CartUtilities.OperationMode.Delete:
+                @if (!DeletingAddress)
+                {
+                    <p>
+                        <b>@OperatorAddress.FirstName @OperatorAddress.LastName, @OperatorAddress.Phone</b><br />
+                        @OperatorAddress.Email<br />
+                        @OperatorAddress.Address, @OperatorAddress.AddressDesc<br />
+                        @OperatorAddress.City, @OperatorAddress.Deparment, Colombia, @OperatorAddress.PostalCode
+                    </p>
+                }
+                else
+                {
+                    <p>Procesando cambios...</p>
+                }
+                break;
+            default:
+                @if (!SavingAddress)
+                {
+                    <MudForm @ref="formShippingAddress" @bind-IsValid="@SuccessAddress">
+                        <MudCard>
+                            <MudCardContent>
+                                <MudGrid>
+                                    <MudItem xs="4">
+                                        <MudStack>
+                                            <MudTextField T="string" Label="First Name" Class="d-flex" Required="true" RequiredError="First Name is required!" FullWidth="true" @bind-Text="@OperatorAddress.FirstName" />
+                                        </MudStack>
+                                    </MudItem>
+                                    <MudItem xs="4">
+                                        <MudStack>
+                                            <MudTextField T="string" Label="Last Name" Class="d-flex" Required="true" RequiredError="Last Name is required!" FullWidth="true" @bind-Text="@OperatorAddress.LastName" />
+                                        </MudStack>
+                                    </MudItem>
+                                    <MudItem xs="4">
+                                        <MudStack>
+                                            <MudTextField T="string" Label="Phone" Class="d-flex" Required="true" RequiredError="Phone is required!" FullWidth="true" @bind-Text="@OperatorAddress.Phone" />
+                                        </MudStack>
+                                    </MudItem>
+                                    <MudItem xs="4">
+                                        <MudStack>
+                                            <MudTextField T="string" Label="Email Address" Class="d-flex" Required="true" RequiredError="Email is required!"
+                                              Validation="@(new EmailAddressAttribute() {ErrorMessage = "The email address is invalid"})" FullWidth="true" @bind-Text="@OperatorAddress.Email" />
+                                        </MudStack>
+                                    </MudItem>
+                                    <MudItem xs="4">
+                                        <MudStack>
+                                            <MudTextField T="string" Label="Department" Class="d-flex" Required="true" RequiredError="Department is required!" FullWidth="true" @bind-Text="@OperatorAddress.Deparment" />
+                                        </MudStack>
+                                    </MudItem>
+                                    <MudItem xs="4">
+                                        <MudStack>
+                                            <MudTextField T="string" Label="City" Class="d-flex" Required="true" RequiredError="City is required!" FullWidth="true" @bind-Text="@OperatorAddress.City" />
+                                        </MudStack>
+                                    </MudItem>
+                                    <MudItem xs="6">
+                                        <MudStack>
+                                            <MudTextField T="string" Label="Adress" Placeholder="House number and street name" RequiredError="Adress is required!" Required="true" Class="d-flex" FullWidth="true" @bind-Text="@OperatorAddress.Address" />
+                                        </MudStack>
+                                    </MudItem>
+                                    <MudItem xs="6">
+                                        <MudStack>
+                                            <MudTextField T="string" Label="Adress Desc" Placeholder="Apartment, suite, unit etc." RequiredError="Adress Desc is required!" Required="true" Class="d-flex" FullWidth="true" @bind-Text="@OperatorAddress.AddressDesc" />
+                                        </MudStack>
+                                    </MudItem>
+                                    <MudItem xs="12">
+                                        <MudStack>
+                                            <MudTextField T="string" Label="Aditional Information" Class="d-flex" FullWidth="true" RequiredError="Aditional Information is required!" @bind-Text="@OperatorAddress.OtherInformation" Lines="2" />
+                                        </MudStack>
+                                    </MudItem>
+                                    <MudItem xs="12">
+                                        <MudCheckBox @bind-Checked="@OperatorAddress.Default" Label="Save as default"></MudCheckBox>
+                                    </MudItem>
+                                </MudGrid>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudForm>
+                }
+                else
+                {
+                    <p>Procesando cambios...</p>
+                }
+                break;
+        }
+    </DialogContent>
+    <DialogActions>
+        @switch (operation)
+        {
+            case CartUtilities.OperationMode.List:
+                <MudButton Variant="Variant.Filled" Color="Color.Default" OnClick="@CloseModalShippingAddressModal">Close</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OkModalShippingAddressModal">Ok</MudButton>
+                break;
+            case CartUtilities.OperationMode.Delete:
+                @if (!DeletingAddress)
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Default" OnClick="@CancelOperationShippingAddressModal">Cancel</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="@DeleteShippingAddress">Delete</MudButton>
+                }
+                break;
+            default:
+                @if (!SavingAddress)
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Default" OnClick="CancelOperationShippingAddressModal">Cancel</MudButton>
+                    @if (!EditingMode)
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@CreateShippingAddress">Save</MudButton>
+                    }
+                    else
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@UpdateShippingAddress">Save</MudButton>
+                    }
+                }
+                break;
+        }
+    </DialogActions>
+</MudDialog>

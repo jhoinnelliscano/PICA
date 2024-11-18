@@ -1,0 +1,228 @@
+﻿@layout MainLayout
+@page "/Product"
+@page "/Product/{Code:long}"
+
+@inject IDialogService Dialog
+@inject ProductService service
+@inject NavigationManager navigate
+@inject ISnackbar Snackbar
+
+<PageTitle>@mainLayout.Title</PageTitle>
+
+<MudGrid Class="d-flex justify-center">
+    <MudItem sm="12" md="11">
+        @if (product == null)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+        }
+        else
+        {
+            <MudGrid>
+                <MudItem sm="12" md="3">
+                    <MudGrid>
+                        <MudItem xs="12" Class="image-container">
+                            <figure class="main-img" style="min-height:250px">
+                                <MudImage id="img-Box"
+                                      Class="rounded-lg"
+                                      Src="@product.Image"
+                                      Fluid="true"
+                                      ObjectFit="ObjectFit.Cover"
+                                      ObjectPosition="ObjectPosition.Center"
+                                      onpointerenter="showImage()" onpointerleave="hideImage()" />
+                            </figure>
+                        </MudItem>
+                        <MudItem xs="12">
+                            @foreach (var img in product.OtherImages)
+                            {
+                                <MudImage Src="@img"
+                                  ObjectFit="ObjectFit.Cover"
+                                  ObjectPosition="ObjectPosition.Center"
+                                  Fluid="true"
+                                  Style="max-width: 72px !important"
+                                  onclick="myImageFunction(this)" Class="rounded-lg img-thumbnail rounded float-left" alt="..." />
+                            }
+                        </MudItem>
+                    </MudGrid>
+                </MudItem>
+                <MudItem sm="12" md="9">
+                    <MudStack class="mud-width-full">
+                        <MudText Typo="Typo.h4">@product.Name</MudText>
+                        <MudText Typo="Typo.caption">@product.Category.Category</MudText>
+                        <p>
+                            <MudRating Size="Size.Small" ReadOnly="true" SelectedValue="@(int.Parse(product.Score!= string.Empty?product.Score:"0"))" /> @*<MudLink Href="#" Typo="Typo.body2" Underline="Underline.Always"><MudIcon Icon="@Icons.Filled.MarkChatUnread" Size="Size.Small" class="mx-2" />Read review (1)</MudLink>*@ <MudLink Href="javascript: void(0);" @onclick="@(e => isOpenReviewFrom = true)" Typo="Typo.body2" Underline="Underline.Always"><MudIcon Icon="@Icons.Filled.EditNote" Size="Size.Small" class="mx-2" />Write a review</MudLink>
+                        </p>
+                        <MudText Typo="Typo.h5">$@(product.Price.ToString())</MudText>
+                        <MudDivider Class="my-2" />
+                        <div class="d-flex flex-row">
+                            <MudNumericField Value="0" Label="Quantity:" Variant="Variant.Text" Min="0" Max="10" class="pr-2" Style="width: 300px" />
+                        </div>
+                        <div class="d-flex flex-row">
+                            <MudFab Size="Size.Small" class="ma-1" Color="Color.Primary" Label="Buy Now" />
+                            <MudFab Size="Size.Small" class="ma-1" Color="Color.Default" StartIcon="@Icons.Material.Filled.ShoppingCart" Label="Add Cart" />
+                            <MudFab Size="Size.Small" class="ma-1" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Favorite" Label="1233132" />
+                            <MudFab Size="Size.Small" class="ma-1" Color="Color.Dark" StartIcon="@Icons.Filled.Share" Label="Shared" OnClick="@(()=>{IsShared = !IsShared;})"/>
+
+                            <MudPopover Open="IsShared" OverflowBehavior="OverflowBehavior.FlipAlways" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Paper="false">
+                                <MudPaper Outlined="true" Class="px-4 py-8">
+                                    <MudTextField T="string" Label="Shared is product" Lines="3" Variant="Variant.Outlined" Text="" Adornment="Adornment.End" AdornmentIcon="@Icons.Filled.FileCopy"/>
+                                </MudPaper>
+                            </MudPopover>
+                        </div>
+                    </MudStack>
+                </MudItem>
+
+                <MudItem sm="12">
+                    <style>
+                        .mud-tab {
+                            min-width: unset;
+                        }
+                    </style>
+                    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6"
+                         Centered="true">
+                        <MudTabPanel Text="Information">
+                            <MudStack class="mud-width-full">
+                                @foreach (var description in product.Description)
+                                {
+                                    <MudText Typo="Typo.body1" Align="Align.Justify">@description</MudText>
+                                }
+                                <MudDivider Class="my-2" />
+
+                                <div class="mud-table-container">
+                                    <table class="mud-table-root">
+                                        <tbody class="mud-table-body">
+                                            @foreach (var specification in product.Specifications)
+                                            {
+                                                <tr class="mud-table-row">
+                                                    <th class="mud-table-cell"><strong>@specification.Description</strong></th>
+                                                    <td class="mud-table-cell">@specification.Value</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </MudStack>
+                        </MudTabPanel>
+                        <MudTabPanel Text="Reviews">
+                            <MudStack Class="pa-4">
+                                @if (product.Reviews == null)
+                                {
+                                    <MudText Typo="Typo.h5" Style="text-decoration:solid;">There are no ratings.</MudText>
+                                }
+                                else
+                                {
+                                    @foreach (var review in pagerProductReview.GetItemsByPage())
+                                    {
+                                        <Review id="@review.Id" userName="@review.UserName" date="@review.CreatedAt" rating="@review.Value" review="@review.Review" />
+                                    }
+                                    @if (pagerProductReview.Items.Count() > pagerProductReview.PageSize)
+                                    {
+                                        <div class="d-flex align-center justify-space-between">
+                                            <MudText Typo="Typo.caption" Class="pl-2">Results:@pagerProductReview.GetStartItems() - @pagerProductReview.GetEndItems() of @pagerProductReview.Items.Count() Items </MudText>
+                                            <MudPagination BoundaryCount="0" MiddleCount="0" Count="@pagerProductReview.GetTotalPages()" @bind-Selected="pagerProductReview.Page"
+                                               ShowFirstButton="true" ShowLastButton="true" ShowNextButton="true" ShowPreviousButton="true"
+                                               Variant="Variant.Text" />
+                                        </div>
+                                    }
+                                }
+                            </MudStack>
+                        </MudTabPanel>
+                    </MudTabs>
+                </MudItem>
+            </MudGrid>
+        }
+    </MudItem>
+</MudGrid>
+<MudDialog @bind-IsVisible="isOpenReviewFrom" Options="dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h5">
+            <MudIcon Icon="@Icons.Filled.Newspaper" Class="mr-3" /> New review
+        </MudText>
+        <MudText Typo="Typo.caption" Color="Color.Info">Your email address will not be published.</MudText>
+    </TitleContent>
+    <DialogContent>
+        <ReviewForm product="@product" reviewComplet="@OnReviewCompletAsync" reviewError="@OnReviewErrorAsync"/>
+    </DialogContent>
+</MudDialog>
+
+@code {
+
+    #region component parameters
+    [Parameter]
+    public long Code { get; set; }
+    [CascadingParameter]
+    public MainLayout mainLayout { get; set; }
+    [CascadingParameter]
+    public Error Error { get; set; }
+    #endregion
+
+    #region component properties
+    private bool IsShared;
+    protected bool isOpenReviewFrom;
+    protected DialogOptions dialogOptions = new() { FullWidth = true };
+    protected ProductResponse product { get; set; } = null;
+    protected Pager<ProductReviewResponse> pagerProductReview;
+    #endregion
+
+    #region component events
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            mainLayout.Title = "Product";
+            product = await GetProduct();
+            pagerProductReview = new Pager<ProductReviewResponse>()
+                {
+                    Page = 1,
+                    PageSize = 10,
+                    Items = product.Reviews == null ? Enumerable.Empty<ProductReviewResponse>() : product.Reviews
+                };
+        }
+        catch (Exception ex)
+        {
+            Error.ProcessError(ex);
+        }
+    }
+    #endregion
+
+    #region component Methos
+    protected async Task<ProductResponse> GetProduct()
+    {
+        var request = new ProductRequest() { ProductCode = Code };
+
+        var data = await service.GetProduct(request);
+        return data.Response;
+    }
+
+    protected async Task OnReviewCompletAsync()
+    {
+        try
+        {   
+            product = await GetProduct();
+            pagerProductReview = new Pager<ProductReviewResponse>()
+                {
+                    Page = 1,
+                    PageSize = 10,
+                    Items = product.Reviews == null ? Enumerable.Empty<ProductReviewResponse>() : product.Reviews
+                };
+            Snackbar.Add("Review created", Severity.Success);
+            isOpenReviewFrom = false;
+        }
+        catch (Exception ex)
+        {
+            Error.ProcessError(ex);
+        }
+    }
+
+    protected async Task OnReviewErrorAsync()
+    {
+        try
+        {
+            Snackbar.Add("Opss! an error occurred try again later", Severity.Warning);
+        }
+        catch (Exception ex)
+        {
+            Error.ProcessError(ex);
+        }
+    }
+    #endregion
+}

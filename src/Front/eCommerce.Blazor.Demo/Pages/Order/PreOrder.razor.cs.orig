@@ -1,0 +1,103 @@
+﻿using Blazored.Toast.Services;
+using eCommerce.Blazor.Demo.Pages.Shared;
+using eCommerce.Blazor.Demo.SessionStorage;
+using eCommerce.Commons.Objects.Responses.Customer;
+using eCommerce.Commons.Objects.Responses.ShoppingCart;
+using eCommerce.Services.Contracts;
+using Microsoft.AspNetCore.Components;
+using MudBlazor;
+
+namespace eCommerce.Blazor.Demo.Pages.Order
+{
+    public partial class PreOrder : ComponentBase
+    {
+        #region component parameters and Inject
+        [CascadingParameter]
+        public MainLayout mainLayout { get; set; }
+        [CascadingParameter]
+        public Error Error { get; set; }
+        [Parameter]
+        public string Code { get; set; }
+        [Inject]
+        public ShoppingSessionStorage _ShoppingSessionStorage { get; set; }
+        [Inject]
+        public ICustomerService _customerService { get; set; }
+        #endregion
+
+        #region component properties
+        private List<ShoppingCartResponse>? items { get; set; }
+        public decimal TotalPriceIsCheck { get => items.Sum(x => x.TotalPrice); }
+        public string textPrueba;
+        public bool boolPrueba;
+        protected bool isOpenAddressForm = false;
+        protected DialogOptions dialogAddressOptions = new()
+        {
+            FullWidth = true,
+            CloseOnEscapeKey = false,
+            DisableBackdropClick = true,
+            MaxWidth = MaxWidth.Large
+        };
+<<<<<<< HEAD
+
+        protected bool isOpenPaymentForm;
+        protected DialogOptions dialogPaymentOptions = new()
+        {
+            FullWidth = true,
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Small
+        };
+
+        protected CustomerAddressResponse customerAddress { get; set; } = new();
+
+=======
+>>>>>>> main
+        #endregion
+
+        #region component events
+        protected override async Task OnInitializedAsync()
+        {
+            try
+            {
+                mainLayout.Title = "Order";
+                items = (await _ShoppingSessionStorage.GetShoppingCart()).ToList();
+
+            }
+            catch (Exception ex)
+            {
+                Error.ProcessError(ex);
+            }
+        }
+
+        protected async Task OnToggleAddressForm()
+        {
+            isOpenAddressForm = !isOpenAddressForm;
+        }
+
+<<<<<<< HEAD
+        protected async Task CreateCustomerAddress() 
+        {
+        
+        }
+
+        protected async Task GetCustomerAddress()
+        {
+
+        }
+
+=======
+
+        protected async Task onShopChanged()
+        {
+            try
+            {
+                _ShoppingSessionStorage.SaveShoppingCart(items);
+            }
+            catch (Exception ex)
+            {
+                Error.ProcessError(ex);
+            }
+        }
+>>>>>>> main
+        #endregion
+    }
+}

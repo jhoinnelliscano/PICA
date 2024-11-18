@@ -1,0 +1,18 @@
+# docker build -t webapiproducts -f Dockerfile .
+
+FROM mcr.microsoft.com/dotnet/sdk:6.0-alpine as build
+WORKDIR /app
+COPY . .
+RUN dotnet restore ./Services/eCommerce.Products.Api/eCommerce.Products.Api/eCommerce.Products.Api.csproj
+RUN dotnet publish ./Services/eCommerce.Products.Api/eCommerce.Products.Api/eCommerce.Products.Api.csproj -o /app/published-app
+
+FROM mcr.microsoft.com/dotnet/aspnet:6.0-alpine as runtime
+EXPOSE 80
+WORKDIR /app
+COPY --from=build /app/published-app /app
+ENV \
+    DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false \
+    LC_ALL=en_US.UTF-8 \
+    LANG=en_US.UTF-8
+RUN apk add --no-cache icu-libs
+ENTRYPOINT ["dotnet", "eCommerce.Products.Api.dll"]

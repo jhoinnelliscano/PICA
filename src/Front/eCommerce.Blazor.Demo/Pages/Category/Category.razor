@@ -1,0 +1,111 @@
+﻿@layout MainLayout
+@page "/"
+@page "/Categories"
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@inject IDialogService Dialog
+@inject ProductService service
+@inject IAccessTokenProvider TokenProvider 
+
+<PageTitle>@mainLayout.Title</PageTitle>
+
+<MudGrid Class="d-flex justify-center">
+    <MudItem sm="12" md="11">
+        @if (categories == null)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+        }
+        else if (categories.Count() == 0)
+        {
+            <NotFound />
+        }
+        else
+        {
+            <MudGrid Spacing="4">
+                @foreach (var category in pagerCategories.GetItemsByPage())
+                {
+                    <MudItem sm="2" md="4">
+                        <MudPaper Style="@($"background: url('{@category.Image.Replace("\r\n","")}') no-repeat center center !important; -webkit-background-size: cover; -moz-background-size: cover; -o-background-size: cover; background-size: cover;  position: relative; font-weight: 500;")" Height="200px">
+                            <MudOverlay Visible="true" DarkBackground="true" Absolute="true">
+                                <MudStack AlignItems=AlignItems.Center Justify=Justify.Center>
+                                    @*<MudText Typo="Typo.h5" Style="color:white;" Align="Align.Center"></MudText>*@
+                                    <MudChip Color="Color.Primary">@category.Category</MudChip>
+                                    <MudStack Row="true">
+                                        <MudTooltip Text="Ir a comprar">
+                                            <MudFab StartIcon="@Icons.Filled.ShoppingCart" Color="Color.Primary" Href="@($"/Shop/{category.Id}")" Size="Size.Small" />
+                                        </MudTooltip>
+                                        <MudTooltip Text="Ver proveedores">
+                                            <MudFab StartIcon="@Icons.Filled.AssignmentInd" Color="Color.Primary" Href="@($"/Providers/{category.Id}")" Size="Size.Small" />
+                                        </MudTooltip>
+                                    </MudStack>
+                                </MudStack>
+                            </MudOverlay>
+                        </MudPaper>
+                    </MudItem>
+                }
+
+                @if (pagerCategories.Items.Count() > pagerCategories.PageSize)
+                {
+                    <MudItem sm="12">
+                        <div class="d-flex align-center justify-space-between">
+                            <MudText Typo="Typo.caption" Class="pl-2">Results:@pagerCategories.GetStartItems() - @pagerCategories.GetEndItems() of @pagerCategories.Items.Count() Items </MudText>
+
+
+                            <MudPagination BoundaryCount="0" MiddleCount="0" Count="@pagerCategories.GetTotalPages()" @bind-Selected="pagerCategories.Page"
+                                   ShowFirstButton="true" ShowLastButton="true" ShowNextButton="true" ShowPreviousButton="true"
+                                   Variant="Variant.Text" />
+                        </div>
+                    </MudItem>
+                }
+            </MudGrid>
+        }
+    </MudItem>
+</MudGrid>
+
+@code {
+
+    #region component parameters
+    [CascadingParameter]
+    public MainLayout mainLayout { get; set; }
+    [CascadingParameter]
+    public Error Error { get; set; }
+    #endregion
+
+
+    #region component properties
+    protected IEnumerable<ProductCategoryResponse> categories { get; set; } = null;
+    protected Pager<ProductCategoryResponse> pagerCategories;
+    #endregion
+
+    #region component events
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            mainLayout.Title = "Categories";
+            categories = await GetCategories();
+        }
+        catch (Exception ex)
+        {
+            categories = Enumerable.Empty<ProductCategoryResponse>();
+            Error.ProcessError(ex);
+        }
+        finally
+        {
+            pagerCategories = new Pager<ProductCategoryResponse>()
+                {
+                    Page = 1,
+                    PageSize = 12,
+                    Items = categories
+                };
+        }
+    }
+    #endregion
+
+    #region component Methos
+    protected async Task<IEnumerable<ProductCategoryResponse>> GetCategories()
+    {
+        var data = await service.GetProductCategories(new ProductCategoryRequest { ProviderRequired = false });
+        return data.Response;
+    }
+    #endregion
+}

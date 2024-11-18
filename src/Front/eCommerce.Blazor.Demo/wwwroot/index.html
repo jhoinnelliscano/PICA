@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>eCommerce.Blazor.Demo</title>
+    <base href="/" />
+    <!--<link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />-->
+    <!--<link href="css/bootstrap.min.css" rel="stylesheet" />
+    <script src="js/bootstrap.min.js"></script>-->
+    <!--<script src="_content/MatBlazor/dist/matBlazor.js"></script>
+    <link href="_content/MatBlazor/dist/matBlazor.css" rel="stylesheet" />-->
+
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+
+    <link href="_content/Blazored.Toast/blazored-toast.min.css" rel="stylesheet" />
+
+    <link href="css/app.css" rel="stylesheet" />
+    <link href="eCommerce.Blazor.Demo.styles.css" rel="stylesheet" />
+</head>
+
+<body>
+    <div id="app">Loading...</div>
+
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+
+    <script>
+
+        let attached = false;
+
+
+
+        function myImageFunction(productSmallImg) {
+            let imageContainer = document.getElementById("img-Box");
+            imageContainer.src = productSmallImg.src;
+        }
+
+        const followMouse = (event) => {
+            let imageContainer = document.getElementById("img-Box");
+            //imageContainer.style.left = event.x + "px";
+            //imageContainer.style.top = event.y + "px";
+            //imageContainer.style.transform = "scale(2.5) translate(" + (-event.x) + "," + (-event.y) +"%)";
+
+        }
+
+        function showImage() {
+            if (!attached) {
+                let imageContainer = document.getElementById("img-Box");
+                attached = true;
+                //imageContainer.style.display = "block";
+                document.addEventListener("pointermove", followMouse);
+            }
+        }
+
+        function hideImage() {
+            let imageContainer = document.getElementById("img-Box");
+            attached = false;
+            imageContainer.style.display = "relative";
+            //imageContainer.style.transform = "scale(1)";
+            document.removeEventListener("pointermove", followMouse);
+        }
+
+        function doSomething(scroll_pos) {
+            // Hacer algo con la posición del scroll
+        }
+
+        window.addEventListener('scroll', function (e) {
+            //console.log((window.pageYOffset || document.documentElement.scrollTop) - (document.documentElement.clientTop || 0));
+
+            let n = document.getElementsByClassName("navbar");
+            let s = (window.pageYOffset || document.documentElement.scrollTop) - (document.documentElement.clientTop || 0);
+            if (s > 50) {
+                n[0].classList.add("top-nav-collapse");
+            } else {
+                n[0].classList.remove("top-nav-collapse");
+            }
+        });
+
+    </script>
+    <script src="_content/Microsoft.AspNetCore.Components.WebAssembly.Authentication/AuthenticationService.js"></script>
+    <script src="_framework/blazor.webassembly.js"></script>
+    <script type="text/javascript" src="https://checkout.epayco.co/checkout.js"></script>
+
+    <script>
+        window.convertArray = (win1251Array) => {
+            var win1251decoder = new TextDecoder('windows-1251');
+            var bytes = new Uint8Array(win1251Array);
+            var decodedArray = win1251decoder.decode(bytes);
+            console.log(decodedArray);
+            return decodedArray;
+        };
+
+        window.payHelpers = null;
+        window.setEpayConfigure = (d) => {
+            console.log(d);
+            payHelpers = ePayco.checkout.configure(d);
+        };
+
+        window.checkout = (d) => {
+            console.log(d);
+            payHelpers.open(d);
+        };
+
+        window.getTransaction = (ref_payco) => {
+            //var ref_payco = getQueryParam('ref_payco');
+            var urlapp = "https://secure.epayco.co/validation/v1/reference/" + ref_payco;
+
+            var data = fetch(urlapp)
+                .then(response => response.json());
+            console.log(data)
+            return data;
+        };
+    </script>
+</body>
+
+</html>
